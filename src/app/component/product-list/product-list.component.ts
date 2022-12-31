@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { CartItem } from 'src/app/common/CartItem';
 import { Product } from 'src/app/common/Product';
+import { CartService } from 'src/app/service/cart.service';
 import { ProductService } from 'src/app/service/product.service';
 
 @Component({
@@ -16,7 +18,8 @@ export class ProductListComponent implements OnInit {
   pageSizeSet = [{id: 1, name: 5}, {id: 2, name: 10}, {id: 3, name: 15}, {id: 4, name: 20}];
 
   constructor(private productService: ProductService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cartService: CartService
   ) { }
 
   products: Product[] = [];
@@ -62,6 +65,10 @@ export class ProductListComponent implements OnInit {
       this.thePageSize = response.page.size;
       this.theTotalElements = response.page.totalElements;
     })
+  }
+
+  addToCart(product: Product){
+    this.cartService.addToCart(new CartItem(product));
   }
 
 }
