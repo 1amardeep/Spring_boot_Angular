@@ -1,9 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ICountryResponse, IState, IStateResponse } from 'src/app/common/Form';
+import { Router } from '@angular/router';
+import { ICountryResponse, IStateResponse } from 'src/app/common/Form';
+import { Order } from 'src/app/common/order';
+import { Purchase } from 'src/app/common/purchase';
+import { ShippingAddress } from 'src/app/common/shipping-address';
+import { BillingAddress } from 'src/app/common/billing-address';
 import { CartService } from 'src/app/service/cart.service';
+import { CheckoutService } from 'src/app/service/checkout.service';
 import { FormStaticService } from 'src/app/service/form-static.service';
 import { CartValidator } from 'src/app/validators/cart-validator';
+import { OrderItem } from 'src/app/common/order-item';
+import { Customer } from 'src/app/common/customer';
 
 @Component({
   selector: 'app-checkout',
@@ -24,7 +32,9 @@ export class CheckoutComponent implements OnInit {
 
   constructor(private fb: FormBuilder,
     private cartService: CartService,
-    private formStatic: FormStaticService
+    private formStatic: FormStaticService,
+    private checkoutService: CheckoutService,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -76,10 +86,70 @@ export class CheckoutComponent implements OnInit {
   }
 
   onSubmit() {
-    console.log(this.checkoutFormGroup.get('customer')?.value);
+
     if (this.checkoutFormGroup.invalid) {
       this.checkoutFormGroup.markAllAsTouched();
+      return;
     }
+
+    /**order */
+    let order = new Order(this.totalPrice, this.totalQuantity);
+    let cartItem = this.cartService.cartItems;
+
+    /*order item */
+    let orderItems: OrderItem[] = cartItem.map((obj) => new OrderItem(obj));
+
+    let shippingAddressObj = this.checkoutFormGroup.controls['shippingAddress'].value;
+    let shippingAddress = new ShippingAddress(
+      shippingAddressObj.street,
+      shippingAddressObj.city,
+      shippingAddressObj.state.name,
+      shippingAddressObj.country.name,
+      shippingAddressObj.zipCode
+    )
+
+    let billingAddressObj = this.checkoutFormGroup.controls['billingAddress'].value;
+    let billingAddress = new BillingAddress(
+      billingAddressObj.street,
+      billingAddressObj.city,
+      billingAddressObj.state.name,
+      billingAddressObj.country.name,
+      billingAddressObj.zipCode
+    )
+
+    let customerObj = this.checkoutFormGroup.controls['customer'].value;
+    let customer = new Customer(
+      customerObj.firstName,
+      customerObj.lastName,
+      customerObj.email
+    )
+    let purchase = new Purchase(customer,
+      shippingAddress,
+      billingAddress,
+      order,
+      orderItems);
+
+    let purchaseToString = JSON.stringify(purchase);
+    let purchaseToParse = JSON.parse(purchaseToString);
+    this.checkoutService.checkout(purchaseToParse).subscribe(
+      (res) => {
+        console.log(res.orderTrackingNumber);
+        this.resetCart();
+      },
+      err => {
+        console.log(err);
+      }
+    );
+  }
+
+  resetCart() {
+     this.cartService.cartItems = [];
+     this.cartService.totalPrice.next(0);
+     this.cartService.totalQuantity.next(0);
+
+     this.checkoutFormGroup.reset();
+
+     this.router.navigateByUrl("/products");
   }
 
   copyShippingToBillingAddress(e: Event) {
