@@ -1,13 +1,17 @@
 <div class="page-wrapper">
-
+  <app-loader></app-loader>
   <!-- MENU SIDEBAR-->
   <aside class="menu-sidebar d-none d-lg-block">
     <div class="logo">
       <a routerLink="/products">
-        <img src="assets/images/logo.png" alt="luv2shop" class="img-responsive">
+        <img
+          src="assets/images/logo.png"
+          alt="luv2shop"
+          class="img-responsive"
+        />
       </a>
     </div>
-      <app-product-category></app-product-category>
+    <app-product-category></app-product-category>
   </aside>
   <!-- END MENU SIDEBAR-->
 
@@ -19,17 +23,14 @@
         <div class="container-fluid">
           <div class="header-wrap">
             <app-product-search></app-product-search>
-             <app-cart-status></app-cart-status>
+            <app-cart-status></app-cart-status>
           </div>
-          <div class="account-wrap">
-            
-          </div>
+          <div class="account-wrap"></div>
         </div>
       </div>
     </header>
 
     <router-outlet></router-outlet>
-    
   </div>
 </div>
 
